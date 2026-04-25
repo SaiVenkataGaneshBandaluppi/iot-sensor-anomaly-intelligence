@@ -1,0 +1,28 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -U pip setuptools
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check app/ tests/ data/ streamlit_app.py
+      - name: Run tests with coverage
+        run: coverage run -m pytest tests/ -v
+      - name: Enforce coverage threshold
+        run: coverage report --fail-under=70
+      - name: Security scan
+        run: bandit -r app/ -lll
+      - name: Dependency check
+        run: |
+          pip check
+          pip-audit -r requirements.txt
+          pip-audit -r requirements-dev.txt
