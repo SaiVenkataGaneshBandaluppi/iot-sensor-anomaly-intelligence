@@ -2,8 +2,6 @@
 
 A production-grade multi-agent system that ingests industrial IoT sensor data, detects anomalies in real time, predicts equipment failures before they occur, identifies root causes, and generates maintenance work orders using five LangGraph agents orchestrated with FastAPI, PostgreSQL, Redis, and Streamlit.
 
-![Demo GIF here]
-
 ## Author
 
 [Bandaluppi Sai Venkata Ganesh](https://github.com/SaiVenkataGaneshBandaluppi)
@@ -121,9 +119,9 @@ POST /equipment/{id}/analyse
 }
 ```
 
-## API Key
+## Groq API Key
 
-This project uses BYOK (Bring Your Own Key). Enter your Groq API key in the Streamlit sidebar at runtime. Keys are never stored. All agents include deterministic fallback logic for keyless operation.
+Set `GROQ_API_KEY` in your `.env` file to enable LLM-powered root cause analysis via Groq (Llama-3.3-70b). Leave it blank to run entirely on deterministic fallback logic — all five agents operate without an API key.
 
 ## Tests
 
