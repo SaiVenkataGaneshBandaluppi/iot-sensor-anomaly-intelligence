@@ -42,22 +42,26 @@ def _sidebar() -> dict:
             st.sidebar.error(f"Connection failed: {err}")
 
     st.sidebar.divider()
-    st.sidebar.subheader("Groq API Key")
-    groq_key = st.sidebar.text_input("Groq API Key (optional)", type="password")
-    st.sidebar.caption("Key is used only for this session and is never stored.")
+    groq_key = st.sidebar.text_input(
+        "Groq API Key",
+        type="password",
+        help="Enter your Groq API key. It is never stored.",
+    )
+    st.session_state["groq_key"] = groq_key
 
     if "token" in st.session_state:
         st.sidebar.success(f"Signed in as {st.session_state.get('username', '')}")
 
-    return {"api_base": api_base, "groq_key": groq_key}
+    return {"api_base": api_base}
 
 
-def _auth_headers(groq_key: str = "") -> dict:
+def _auth_headers() -> dict:
     token = st.session_state.get("token", "")
-    headers = {"Authorization": f"Bearer {token}"}
-    if groq_key:
-        headers["X-Groq-Key"] = groq_key
-    return headers
+    groq_key = st.session_state.get("groq_key", "")
+    return {
+        "Authorization": f"Bearer {token}",
+        "X-Groq-Key": groq_key,
+    }
 
 
 def _require_auth() -> bool:
@@ -67,12 +71,12 @@ def _require_auth() -> bool:
     return True
 
 
-def page_analyse(api_base: str, groq_key: str) -> None:
+def page_analyse(api_base: str) -> None:
     st.title("Analyse Equipment")
     if not _require_auth():
         return
 
-    headers = _auth_headers(groq_key)
+    headers = _auth_headers()
 
     with st.expander("Register New Equipment", expanded=False):
         with st.form("register_equipment"):
@@ -209,12 +213,12 @@ def _display_analysis_result(result: dict) -> None:
                 st.warning(e)
 
 
-def page_registry(api_base: str, groq_key: str) -> None:
+def page_registry(api_base: str) -> None:
     st.title("Equipment Registry")
     if not _require_auth():
         return
 
-    headers = _auth_headers(groq_key)
+    headers = _auth_headers()
     try:
         resp = requests.get(f"{api_base}/equipment", headers=headers, timeout=10)
         if resp.status_code != 200:
@@ -246,12 +250,12 @@ def page_registry(api_base: str, groq_key: str) -> None:
     st.plotly_chart(fig, use_container_width=True)
 
 
-def page_analytics(api_base: str, groq_key: str) -> None:
+def page_analytics(api_base: str) -> None:
     st.title("Analytics")
     if not _require_auth():
         return
 
-    headers = _auth_headers(groq_key)
+    headers = _auth_headers()
 
     try:
         stats_resp = requests.get(f"{api_base}/dashboard/stats", headers=headers, timeout=10)
@@ -316,12 +320,12 @@ def page_analytics(api_base: str, groq_key: str) -> None:
             st.error(f"Failed to load readings: {err}")
 
 
-def page_maintenance_hub(api_base: str, groq_key: str) -> None:
+def page_maintenance_hub(api_base: str) -> None:
     st.title("Maintenance Hub")
     if not _require_auth():
         return
 
-    headers = _auth_headers(groq_key)
+    headers = _auth_headers()
 
     try:
         eq_resp = requests.get(f"{api_base}/equipment", headers=headers, timeout=10)
@@ -388,7 +392,6 @@ def page_maintenance_hub(api_base: str, groq_key: str) -> None:
 def main() -> None:
     config = _sidebar()
     api_base = config["api_base"].rstrip("/")
-    groq_key = config["groq_key"]
 
     pages = {
         "Analyse Equipment": page_analyse,
@@ -398,7 +401,7 @@ def main() -> None:
     }
 
     selected_page = st.sidebar.radio("Navigation", list(pages.keys()))
-    pages[selected_page](api_base, groq_key)
+    pages[selected_page](api_base)
 
 
 if __name__ == "__main__":

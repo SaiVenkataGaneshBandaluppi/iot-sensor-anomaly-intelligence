@@ -1,3 +1,4 @@
+import contextvars
 import json
 import logging
 from typing import Any
@@ -6,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 _groq_client = None
 _client_initialized = False
+_request_api_key: contextvars.ContextVar[str] = contextvars.ContextVar("_request_api_key", default="")
 
 
 def get_groq_client() -> Any | None:
@@ -35,8 +37,17 @@ def reset_groq_client() -> None:
     _client_initialized = False
 
 
-def call_groq(prompt: str, system: str, model: str = "llama-3.3-70b-versatile") -> dict | None:
-    client = get_groq_client()
+def call_groq(prompt: str, system: str, model: str = "llama-3.3-70b-versatile", api_key: str = "") -> dict | None:
+    effective_key = api_key or _request_api_key.get()
+    if effective_key:
+        try:
+            import groq as _groq
+            client: Any = _groq.Groq(api_key=effective_key, timeout=10.0)
+        except Exception as err:
+            logger.warning("Failed to create per-request Groq client: %s", err)
+            return None
+    else:
+        client = get_groq_client()
     if client is None:
         return None
     try:

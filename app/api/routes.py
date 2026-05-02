@@ -3,7 +3,7 @@ import re
 from datetime import datetime, timezone
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel, field_validator
@@ -252,6 +252,7 @@ async def analyse_equipment(
     body: AnalyseRequest,
     current_user: User = Depends(_get_current_user),
     db: AsyncSession = Depends(get_db),
+    x_groq_key: str = Header(default=""),
 ) -> dict:
     result = await db.execute(
         select(Equipment).where(
@@ -275,7 +276,7 @@ async def analyse_equipment(
     ]
 
     try:
-        workflow_result = await run_analysis(equipment.equipment_id, equipment.equipment_type, raw_readings)
+        workflow_result = await run_analysis(equipment.equipment_id, equipment.equipment_type, raw_readings, groq_api_key=x_groq_key)
     except Exception as err:
         logger.error("Workflow failed for equipment %s: %s", equipment_id, err)
         analysis = AnalysisResult(

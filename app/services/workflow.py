@@ -8,6 +8,7 @@ from app.agents.failure_predictor_agent import predict_failure
 from app.agents.maintenance_order_agent import generate_maintenance_order
 from app.agents.root_cause_agent import analyse_root_cause
 from app.agents.sensor_ingestion_agent import ingest_sensors
+from app.services.groq_client import _request_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ def get_workflow() -> Any:
     return _compiled_workflow
 
 
-async def run_analysis(equipment_id: str, equipment_type: str, readings: list[dict]) -> dict:
+async def run_analysis(equipment_id: str, equipment_type: str, readings: list[dict], groq_api_key: str = "") -> dict:
     workflow = get_workflow()
     initial_state: dict = {
         "equipment_id": equipment_id,
@@ -53,9 +54,12 @@ async def run_analysis(equipment_id: str, equipment_type: str, readings: list[di
         "maintenance_order": {},
         "errors": [],
     }
+    ctx_token = _request_api_key.set(groq_api_key)
     try:
         result = await workflow.ainvoke(initial_state)
         return result
     except Exception as err:
         logger.error("Workflow execution failed for equipment %s: %s", equipment_id, err)
         raise
+    finally:
+        _request_api_key.reset(ctx_token)
