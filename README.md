@@ -22,6 +22,7 @@ Industrial equipment failures are expensive and disruptive. This system continuo
 - Full security headers middleware
 - Async FastAPI with PostgreSQL and SQLAlchemy
 - Streamlit dashboard with Plotly dark-theme charts
+- BYOK: per-request Groq API key via sidebar, never stored
 - Docker Compose for one-command deployment
 - GitHub Actions CI with coverage enforcement and security scanning
 
@@ -121,7 +122,11 @@ POST /equipment/{id}/analyse
 
 ## Groq API Key
 
-Set `GROQ_API_KEY` in your `.env` file to enable LLM-powered root cause analysis via Groq (Llama-3.3-70b). Leave it blank to run entirely on deterministic fallback logic — all five agents operate without an API key.
+Set `GROQ_API_KEY` in your `.env` file to enable LLM-powered root cause analysis via Groq (Llama-3.3-70b). Leave it blank to run entirely on deterministic fallback logic; all five agents operate without an API key.
+
+## BYOK: Bring Your Own Key
+
+This project does not store any API keys. Enter your Groq API key in the Streamlit sidebar; it is held in browser session state only for the duration of that session. Each analysis request sends the key via the `X-Groq-Key` header, which the API route reads and passes through the workflow to the Groq client. The key is never written to disk or database.
 
 ## Tests
 
