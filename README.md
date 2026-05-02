@@ -1,3 +1,5 @@
+![IoT Sensor Anomaly Intelligence](assets/logo.svg)
+
 # IoT Sensor Anomaly Intelligence
 
 A production-grade multi-agent system that ingests industrial IoT sensor data, detects anomalies in real time, predicts equipment failures before they occur, identifies root causes, and generates maintenance work orders using five LangGraph agents orchestrated with FastAPI, PostgreSQL, Redis, and Streamlit.
