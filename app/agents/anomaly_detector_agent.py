@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+from scipy import stats
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +24,10 @@ def _compute_z_scores(readings: list[dict]) -> dict[str, list[float]]:
     z_scores: dict[str, list[float]] = {}
     for field in SENSOR_FIELDS:
         values = np.array([r[field] for r in readings], dtype=float)
-        std = float(np.std(values))
-        mean = float(np.mean(values))
-        if std < 1e-9:
+        if np.std(values) < 1e-9:
             z_scores[field] = [0.0] * len(values)
         else:
-            z_scores[field] = [float(abs((v - mean) / std)) for v in values]
+            z_scores[field] = [float(abs(z)) for z in stats.zscore(values, ddof=0)]
     return z_scores
 
 
